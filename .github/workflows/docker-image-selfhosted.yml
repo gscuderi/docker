@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ quickstart2 ]
 
+env:
+  TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/jenkins:test
+
 jobs:
 
   build:
@@ -15,29 +18,40 @@ jobs:
     steps:
       -
         name: Checkout 
-        uses: gscuderi/checkout@v2
+        uses: ${{ secrets.DOCKER_HUB_USERNAME }}/checkout@v2
       - 
         if: github.event_name == 'pull_request'
         name: PULL REQUEST Build the Docker image
         run: docker build . --file Dockerfile --tag jenkins-pullrequest:$(date +%s)
       -
-        if: github.event_name != 'pull_request'
         name: Login to Docker Hub
-        uses: gscuderi/docker-login-action@v1
+        uses: ${{ secrets.DOCKER_HUB_USERNAME }}/docker-login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       -
-        if: github.event_name != 'pull_request'
+        name: Set up QEMU
+        uses: ${{ secrets.DOCKER_HUB_USERNAME }}/docker-setup-qemu-action@v1
+      -
         name: Set up Docker Buildx
-        uses: gscuderi/docker-setup-buildx-action@v1
+        uses: ${{ secrets.DOCKER_HUB_USERNAME }}/docker-setup-buildx-action@v1
+      -
+        name: Build and export to Docker
+        uses: ${{ secrets.DOCKER_HUB_USERNAME }}/docker-build-push-action@v2
+        with:
+          context: .
+          load: true
+          tags: ${{ env.TEST_TAG }}
+      -
+        name: Test
+        run: |
+          docker run --rm ${{ env.TEST_TAG }}
       -
         if: github.event_name != 'pull_request'
         name: Build and push
-        uses: gscuderi/docker-build-push-action@v2
+        uses: ${{ secrets.DOCKER_HUB_USERNAME }}/docker-build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jenkins:latest
       
