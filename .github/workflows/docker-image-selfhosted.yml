@@ -4,7 +4,6 @@ on:
   push:
     branches: [ quickstart2 ]
   pull_request:
-    branches: [ quickstart2 ]
 
 env:
   TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/jenkins:test
