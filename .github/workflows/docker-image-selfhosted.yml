@@ -11,8 +11,25 @@ jobs:
   build:
 
     runs-on: self-hosted
-
+      
     steps:
-    - uses: gscuderi/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag jenkins:$(date +%s)
+      -
+        name: Checkout 
+        uses: gscuderi/checkout@v2
+      -
+        name: Login to Docker Hub
+        uses: gscuderi/docker-login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      -
+        name: Set up Docker Buildx
+        uses: gscuderi/docker-setup-buildx-action@v1
+      -
+        name: Build and push
+        uses: gscuderi/docker-build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/simplewhale:latest
