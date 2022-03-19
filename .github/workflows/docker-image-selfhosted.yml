@@ -9,11 +9,8 @@ env:
   TEST_TAG: ${{ secrets.DOCKER_HUB_USERNAME }}/jenkins:test
 
 jobs:
-
-  build:
-
+  docker:
     runs-on: self-hosted
-      
     steps:
       -
         name: Checkout 
