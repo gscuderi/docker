@@ -11,8 +11,33 @@ jobs:
   build:
 
     runs-on: self-hosted
-
+      
     steps:
-    - uses: gscuderi/checkout@v2
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+      -
+        name: Checkout 
+        uses: gscuderi/checkout@v2
+      - 
+        if: github.event_name == 'pull_request'
+        name: PULL REQUEST Build the Docker image
+        run: docker build . --file Dockerfile --tag jenkins-pullrequest:$(date +%s)
+      -
+        if: github.event_name != 'pull_request'
+        name: Login to Docker Hub
+        uses: gscuderi/docker-login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      -
+        if: github.event_name != 'pull_request'
+        name: Set up Docker Buildx
+        uses: gscuderi/docker-setup-buildx-action@v1
+      -
+        if: github.event_name != 'pull_request'
+        name: Build and push
+        uses: gscuderi/docker-build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jenkins:latest
+      
